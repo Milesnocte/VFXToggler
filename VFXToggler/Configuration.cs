@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using Dalamud.Configuration;
-using SamplePlugin;
 
 namespace VFXToggler;
 
@@ -9,8 +9,7 @@ public class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 0;
 
-    public bool IsConfigWindowMovable { get; set; } = true;
-    public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
+    public Dictionary<string, Dictionary<string, uint>> ContextualBattleFx = new();
     
     public void Save()
     {

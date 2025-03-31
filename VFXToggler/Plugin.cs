@@ -1,9 +1,15 @@
-﻿using Dalamud.Game.Command;
+﻿using System;
+using System.ComponentModel.Design;
+using System.Linq;
+using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using SamplePlugin.Windows;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
+using Lumina.Excel.Sheets;
+using VFXToggler.Windows;
 
 namespace VFXToggler;
 
@@ -15,26 +21,23 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
+    [PluginService] public static IGameConfig GameConfig { get; private set; }
+    
+    [PluginService] internal static IChatGui Chat { get; private set; } = null!;
 
     private const string CommandName = "/pmycommand";
 
     public Configuration Configuration { get; init; }
 
     public readonly WindowSystem WindowSystem = new("VFXToggler");
-    private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
 
     public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-
-        // you might normally want to embed resources and load them from the manifest stream
-        // var goatImagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
-
-        ConfigWindow = new ConfigWindow(this);
+        
         MainWindow = new MainWindow(this);
-
-        WindowSystem.AddWindow(ConfigWindow);
+        
         WindowSystem.AddWindow(MainWindow);
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
@@ -43,19 +46,68 @@ public sealed class Plugin : IDalamudPlugin
         });
 
         PluginInterface.UiBuilder.Draw += DrawUI;
-        
-        PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
-        
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUI;
+        ClientState.TerritoryChanged += OnTerritoryChanged;
         
         Log.Information($"===A cool log message from {PluginInterface.Manifest.Name}===");
+    }
+
+    private void OnTerritoryChanged(ushort territoryId)
+    {
+        try
+        {
+            var cfcSheet = DataManager.GetExcelSheet<ContentFinderCondition>();
+            var cfc = cfcSheet?.FirstOrDefault(c => c.TerritoryType.RowId == territoryId);
+        
+            if (cfc != null)
+            {
+                string contentType = null;
+                switch(cfc.Value.ContentType.Value.Name.ExtractText())
+                {
+                    case "Trials":
+                        contentType = "Trials";
+                        break;
+                    case "Dungeons":
+                    case "Guildhests":
+                    case "V&C Dungeon Finder":
+                    case "Deep Dungeons":
+                        contentType = "Dungeons";
+                        break;
+                    case "Raids":
+                    case "Chaotic Alliance Raid":
+                    case "Ultimate Raids":
+                        contentType = "Raids";
+                        break;
+                    case "PvP":
+                        contentType = "PvP";
+                        break;
+                }
+            
+                if (contentType != null && Configuration.ContextualBattleFx.TryGetValue(contentType, out var settingDict))
+                {
+                    foreach (var keyValuePair in settingDict)
+                    {
+                        GameConfig.UiConfig.Set(keyValuePair.Key, (uint)keyValuePair.Value);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            if (Configuration.ContextualBattleFx.TryGetValue("World", out var settingDict))
+            {
+                foreach (var keyValuePair in settingDict)
+                {
+                    GameConfig.UiConfig.Set(keyValuePair.Key, (uint)keyValuePair.Value);
+                }
+            }
+        }
     }
 
     public void Dispose()
     {
         WindowSystem.RemoveAllWindows();
-
-        ConfigWindow.Dispose();
+        
         MainWindow.Dispose();
 
         CommandManager.RemoveHandler(CommandName);
@@ -67,7 +119,6 @@ public sealed class Plugin : IDalamudPlugin
     }
 
     private void DrawUI() => WindowSystem.Draw();
-
-    public void ToggleConfigUI() => ConfigWindow.Toggle();
+    
     public void ToggleMainUI() => MainWindow.Toggle();
 }

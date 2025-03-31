@@ -1,93 +1,141 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using Lumina.Excel.Sheets;
-using VFXToggler;
 
-namespace SamplePlugin.Windows;
+namespace VFXToggler.Windows;
 
 public class MainWindow : Window, IDisposable
 {
     private Plugin Plugin;
-
-    // We give this window a hidden ID using ##
-    // So that the user will see "My Amazing Window" as window title,
-    // but for ImGui the ID is "My Amazing Window##With a hidden ID"
+    private Dictionary<string, Dictionary<string, uint>> ContextualBattleFx = new();
+    
     public MainWindow(Plugin plugin)
-        : base("My Amazing Window##With a hidden ID", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+        : base("VFX toggler", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(375, 330),
+            MinimumSize = new Vector2(500, 350),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
         
         Plugin = plugin;
     }
+    
+    private readonly string[] battleFxOptions = { "Show All", "Limited", "None" };
 
     public void Dispose() { }
 
     public override void Draw()
     {
-        // Do not use .Text() or any other formatted function like TextWrapped(), or SetTooltip().
-        // These expect formatting parameter if any part of the text contains a "%", which we can't
-        // provide through our bindings, leading to a Crash to Desktop.
-        // Replacements can be found in the ImGuiHelpers Class
-        ImGui.TextUnformatted($"The random config bool is {Plugin.Configuration.SomePropertyToBeSavedAndWithADefault}");
-
-        if (ImGui.Button("Show Settings"))
-        {
-            Plugin.ToggleConfigUI();
-        }
-
-        ImGui.Spacing();
-
-        // Normally a BeginChild() would have to be followed by an unconditional EndChild(),
-        // ImRaii takes care of this after the scope ends.
-        // This works for all ImGui functions that require specific handling, examples are BeginTable() or Indent().
         using (var child = ImRaii.Child("SomeChildWithAScrollbar", Vector2.Zero, true))
         {
             // Check if this child is drawing
             if (child.Success)
             {
-                ImGui.TextUnformatted("Have a goat:");
+                ImGui.SetWindowFontScale(1.5f);
+                ImGui.Text("Battle Effect Settings");
+                ImGui.SetWindowFontScale(1.0f);
+                ImGui.Separator();
+                ImGui.Spacing();
 
-                ImGuiHelpers.ScaledDummy(20.0f);
-
-                // Example for other services that Dalamud provides.
-                // ClientState provides a wrapper filled with information about the local player object and client.
-
-                var localPlayer = Plugin.ClientState.LocalPlayer;
-                if (localPlayer == null)
+                if (ImGui.BeginTabBar("BattleEffectTabs"))
                 {
-                    ImGui.TextUnformatted("Our local player is currently not loaded.");
-                    return;
+                    if (ImGui.BeginTabItem("Open World (Default)"))
+                    {
+                        DrawBattleFxRadios("Self", "BattleEffectSelf", "World");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("Party", "BattleEffectParty", "World");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("Other", "BattleEffectOther", "World");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("PvP", "BattleEffectPvPEnemyPc", "World");
+                        ImGui.EndTabItem();
+                    }
+                    
+                    if (ImGui.BeginTabItem("Dungeons"))
+                    {
+                        DrawBattleFxRadios("Self", "BattleEffectSelf", "Dungeons");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("Party", "BattleEffectParty", "Dungeons");
+                        ImGui.EndTabItem();
+                    }
+
+                    if (ImGui.BeginTabItem("Trials"))
+                    {
+                        DrawBattleFxRadios("Self", "BattleEffectSelf", "Trials");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("Party", "BattleEffectParty", "Trials");
+                        ImGui.EndTabItem();
+                    }
+
+                    if (ImGui.BeginTabItem("Raids"))
+                    {
+                        DrawBattleFxRadios("Self", "BattleEffectSelf", "Raids");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("Party", "BattleEffectParty", "Raids");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("Other", "BattleEffectOther", "Raids");
+                        ImGui.EndTabItem();
+                    }
+                    
+                    if (ImGui.BeginTabItem("PvP"))
+                    {
+                        DrawBattleFxRadios("Self", "BattleEffectSelf", "PvP");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("Party", "BattleEffectParty", "PvP");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("Other", "BattleEffectOther", "PvP");
+                        ImGui.Spacing();
+                        DrawBattleFxRadios("PvP Opponents", "BattleEffectPvPEnemyPc", "PvP");
+                        ImGui.EndTabItem();
+                    }
+
+                    ImGui.EndTabBar();
                 }
 
-                if (!localPlayer.ClassJob.IsValid)
-                {
-                    ImGui.TextUnformatted("Our current job is currently not valid.");
-                    return;
-                }
-
-                // ExtractText() should be the preferred method to read Lumina SeStrings,
-                // as ToString does not provide the actual text values, instead gives an encoded macro string.
-                ImGui.TextUnformatted($"Our current job is ({localPlayer.ClassJob.RowId}) \"{localPlayer.ClassJob.Value.Abbreviation.ExtractText()}\"");
-
-                // Example for quarrying Lumina directly, getting the name of our current area.
-                var territoryId = Plugin.ClientState.TerritoryType;
-                if (Plugin.DataManager.GetExcelSheet<TerritoryType>().TryGetRow(territoryId, out var territoryRow))
-                {
-                    ImGui.TextUnformatted($"We are currently in ({territoryId}) \"{territoryRow.PlaceName.Value.Name.ExtractText()}\"");
-                }
-                else
-                {
-                    ImGui.TextUnformatted("Invalid territory.");
-                }
             }
         }
     }
+    
+    private void DrawBattleFxRadios(string label, string key, string type)
+    {
+        // Get or create the dictionary for the current type (e.g., "Dungeons")
+        if (!Plugin.Configuration.ContextualBattleFx.TryGetValue(type, out var settingDict))
+        {
+            settingDict = new Dictionary<string, uint>();
+            Plugin.Configuration.ContextualBattleFx[type] = settingDict;
+        }
+
+        // Try to get the stored value; if missing, default to current system config
+        if (!settingDict.TryGetValue(key, out var value))
+        {
+            value = Plugin.GameConfig.UiConfig.GetUInt(key);
+            settingDict[key] = value; // store it for later use
+        }
+
+        int current = (int)value;
+
+        ImGui.SetWindowFontScale(1.25f);
+        ImGui.Text(label);
+        ImGui.SetWindowFontScale(1.0f);
+
+        for (int i = 0; i < battleFxOptions.Length; i++)
+        {
+            ImGui.RadioButton($"{battleFxOptions[i]}##{label}{i}_{type}", current == i);
+            if (ImGui.IsItemClicked())
+            {
+                settingDict[key] = (uint)i;
+                Plugin.Configuration.Save(); // optional: save immediately
+            }
+
+            if (i < battleFxOptions.Length - 1)
+            {
+                ImGui.SameLine();
+            }
+        }
+    }
+
 }

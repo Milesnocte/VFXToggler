@@ -1,12 +1,21 @@
 {
-  "Author": "your name here",
-  "Name": "Sample Plugin",
-  "Punchline": "A short one-liner that shows up in /xlplugins.",
-  "Description": "A description that shows up in /xlplugins. List any major slash-command(s).",
+  "Author": "Miles",
+  "Name": "VFX Toggler",
+  "InternalName": "VFXToggler",
+  "AssemblyVersion": "0.0.0.1",
+  "RepoUrl": "https://github.com/Milesnocte/VFXToggler",
+  "Punchline": "Toggle vfx per instance",
+  "Description": "Allows changing vfx settings on a per instance basis.",
   "ApplicableVersion": "any",
   "Tags": [
-    "sample",
-    "plugin",
-    "goats"
-  ]
+    "VFX Toggler",
+    "VFX Changer",
+    "VFX"
+  ],
+  "DalamudApiLevel": 12,
+  "LoadRequiredState": 0,
+  "LoadSync": false,
+  "CanUnloadAsync": false,
+  "LoadPriority": 0,
+  "AcceptsFeedback": true
 }
