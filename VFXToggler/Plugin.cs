@@ -107,7 +107,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         catch (Exception ex)
         {
-            Chat.PrintError($"Failed to get content type: {ex}");
+            Log.Logger.Error($"Failed to get Content Type: {ex}");
         }
     }
 
