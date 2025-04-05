@@ -25,7 +25,7 @@ public sealed class Plugin : IDalamudPlugin
     
     [PluginService] internal static IChatGui Chat { get; private set; } = null!;
 
-    private const string CommandName = "/pmycommand";
+    private const string CommandName = "/vfxtoggler";
 
     public Configuration Configuration { get; init; }
 
@@ -42,7 +42,7 @@ public sealed class Plugin : IDalamudPlugin
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = "A useful message to display in /xlhelp"
+            HelpMessage = "Open the configuration window"
         });
 
         PluginInterface.UiBuilder.Draw += DrawUI;
@@ -57,11 +57,12 @@ public sealed class Plugin : IDalamudPlugin
         try
         {
             var cfcSheet = DataManager.GetExcelSheet<ContentFinderCondition>();
-            var cfc = cfcSheet?.FirstOrDefault(c => c.TerritoryType.RowId == territoryId);
+            var cfc = cfcSheet?.GetRow(territoryId);
         
-            if (cfc != null)
+            if (cfc != null && cfc.Value.ContentType.Value.RowId != 0)
             {
                 string contentType = null;
+                    
                 switch(cfc.Value.ContentType.Value.Name.ExtractText())
                 {
                     case "Trials":
@@ -81,9 +82,21 @@ public sealed class Plugin : IDalamudPlugin
                     case "PvP":
                         contentType = "PvP";
                         break;
+                    default:
+                        return;
                 }
             
-                if (contentType != null && Configuration.ContextualBattleFx.TryGetValue(contentType, out var settingDict))
+                if (Configuration.ContextualBattleFx.TryGetValue(contentType, out var settingDict))
+                {
+                    foreach (var keyValuePair in settingDict)
+                    {
+                        GameConfig.UiConfig.Set(keyValuePair.Key, (uint)keyValuePair.Value);
+                    }
+                }
+            }
+            else
+            {
+                if (Configuration.ContextualBattleFx.TryGetValue("World", out var settingDict))
                 {
                     foreach (var keyValuePair in settingDict)
                     {
@@ -94,13 +107,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         catch (Exception ex)
         {
-            if (Configuration.ContextualBattleFx.TryGetValue("World", out var settingDict))
-            {
-                foreach (var keyValuePair in settingDict)
-                {
-                    GameConfig.UiConfig.Set(keyValuePair.Key, (uint)keyValuePair.Value);
-                }
-            }
+            Chat.PrintError($"Failed to get content type: {ex}");
         }
     }
 
