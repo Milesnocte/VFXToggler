@@ -1,13 +1,10 @@
 ﻿using System;
-using System.ComponentModel.Design;
-using System.Linq;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.Sheets;
 using VFXToggler.Windows;
 
@@ -16,13 +13,10 @@ namespace VFXToggler;
 public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
-    [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] public static IGameConfig GameConfig { get; private set; }
-    
     [PluginService] internal static IChatGui Chat { get; private set; } = null!;
 
     private const string CommandName = "/vfxtoggler";
@@ -48,22 +42,20 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw += DrawUI;
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUI;
         ClientState.TerritoryChanged += OnTerritoryChanged;
-        
-        Log.Information($"===A cool log message from {PluginInterface.Manifest.Name}===");
     }
 
-    private void OnTerritoryChanged(ushort territoryId)
+    private unsafe void OnTerritoryChanged(ushort territoryId)
     {
         try
         {
-            var cfcSheet = DataManager.GetExcelSheet<ContentFinderCondition>();
-            var cfc = cfcSheet?.GetRow(territoryId);
+            var id = GameMain.Instance()->CurrentContentFinderConditionId;
+            var cfc = DataManager.GetExcelSheet<ContentFinderCondition>()!.GetRow(id);
         
-            if (cfc != null && cfc.Value.ContentType.Value.RowId != 0)
+            if (cfc.ContentType.Value.RowId != 0)
             {
                 string contentType = null;
                     
-                switch(cfc.Value.ContentType.Value.Name.ExtractText())
+                switch(cfc.ContentType.Value.Name.ExtractText())
                 {
                     case "Trials":
                         contentType = "Trials";
@@ -107,7 +99,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         catch (Exception ex)
         {
-            Log.Logger.Error($"Failed to get Content Type: {ex}");
+            //Chat.PrintError(ex.ToString());
         }
     }
 
