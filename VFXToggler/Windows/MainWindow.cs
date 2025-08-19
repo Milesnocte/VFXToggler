@@ -34,8 +34,8 @@ public class MainWindow : Window, IDisposable
         {
             if (child.Success)
             {
-                ImGui.SetWindowFontScale(1.5f);
-                ImGui.Text("## Battle Effect Settings");
+                ImGui.SetWindowFontScale(2f);
+                ImGui.Text("Battle Effect Settings");
                 ImGui.SetWindowFontScale(1.0f);
                 ImGui.Separator();
                 ImGui.Spacing();
