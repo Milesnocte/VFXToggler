@@ -2,7 +2,7 @@
   "Author": "Miles",
   "Name": "VFX Toggler",
   "InternalName": "VFXToggler",
-  "AssemblyVersion": "0.0.0.4",
+  "AssemblyVersion": "0.0.0.5",
   "RepoUrl": "https://github.com/Milesnocte/VFXToggler",
   "Punchline": "Toggle vfx per instance",
   "Description": "Allows changing vfx settings on a per instance basis.",
@@ -12,7 +12,7 @@
     "VFX Changer",
     "VFX"
   ],
-  "DalamudApiLevel": 12,
+  "DalamudApiLevel": 13,
   "LoadRequiredState": 0,
   "LoadSync": false,
   "CanUnloadAsync": false,

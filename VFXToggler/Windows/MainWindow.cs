@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
 
 namespace VFXToggler.Windows;
 
@@ -32,12 +32,9 @@ public class MainWindow : Window, IDisposable
     {
         using (var child = ImRaii.Child("SomeChildWithAScrollbar", Vector2.Zero, true))
         {
-            // Check if this child is drawing
             if (child.Success)
             {
-                ImGui.SetWindowFontScale(1.5f);
-                ImGui.Text("Battle Effect Settings");
-                ImGui.SetWindowFontScale(1.0f);
+                ImGui.Text("## Battle Effect Settings");
                 ImGui.Separator();
                 ImGui.Spacing();
 
