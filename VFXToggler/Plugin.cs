@@ -1,24 +1,18 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
-using Dalamud.IoC;
 using Dalamud.Plugin;
-using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.Sheets;
-using VFXToggler.Windows;
+using Microsoft.Extensions.Hosting;
+using VFXToggler.Services;
+using VFXToggler.UI;
 
 namespace VFXToggler;
 
 public sealed class Plugin : IDalamudPlugin
 {
-    [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
-    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
-    [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
-    [PluginService] public static IGameConfig GameConfig { get; private set; }
-    [PluginService] internal static IChatGui Chat { get; private set; } = null!;
-
     private const string CommandName = "/vfxtoggler";
 
     public Configuration Configuration { get; init; }
@@ -26,90 +20,34 @@ public sealed class Plugin : IDalamudPlugin
     public readonly WindowSystem WindowSystem = new("VFXToggler");
     private MainWindow MainWindow { get; init; }
 
-    public Plugin()
+    [Experimental("PendingExcelSchema")]
+    public Plugin(IDalamudPluginInterface pluginInt)
     {
-        Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        pluginInt.Create<BaseServices>();
+ 
+        Configuration = BaseServices.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         
-        MainWindow = new MainWindow(this);
+        pluginInt.Create<TerritoryChange>(Configuration);
+        UiService uiService = pluginInt.Create<UiService>();
+        
+        MainWindow = new MainWindow(this, uiService, Configuration);
         
         WindowSystem.AddWindow(MainWindow);
 
-        CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+        BaseServices.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "Open the configuration window"
         });
 
-        PluginInterface.UiBuilder.Draw += DrawUI;
-        PluginInterface.UiBuilder.OpenMainUi += ToggleMainUI;
-        ClientState.TerritoryChanged += OnTerritoryChanged;
-    }
-
-    private unsafe void OnTerritoryChanged(ushort territoryId)
-    {
-        try
-        {
-            var id = GameMain.Instance()->CurrentContentFinderConditionId;
-            var cfc = DataManager.GetExcelSheet<ContentFinderCondition>()!.GetRow(id);
-        
-            if (cfc.ContentType.Value.RowId != 0)
-            {
-                string contentType = null;
-                    
-                switch(cfc.ContentType.Value.Name.ExtractText())
-                {
-                    case "Trials":
-                        contentType = "Trials";
-                        break;
-                    case "Dungeons":
-                    case "Guildhests":
-                    case "V&C Dungeon Finder":
-                    case "Deep Dungeons":
-                        contentType = "Dungeons";
-                        break;
-                    case "Raids":
-                    case "Chaotic Alliance Raid":
-                    case "Ultimate Raids":
-                        contentType = "Raids";
-                        break;
-                    case "PvP":
-                        contentType = "PvP";
-                        break;
-                    default:
-                        return;
-                }
-            
-                if (Configuration.ContextualBattleFx.TryGetValue(contentType, out var settingDict))
-                {
-                    foreach (var keyValuePair in settingDict)
-                    {
-                        GameConfig.UiConfig.Set(keyValuePair.Key, (uint)keyValuePair.Value);
-                    }
-                }
-            }
-            else
-            {
-                if (Configuration.ContextualBattleFx.TryGetValue("World", out var settingDict))
-                {
-                    foreach (var keyValuePair in settingDict)
-                    {
-                        GameConfig.UiConfig.Set(keyValuePair.Key, (uint)keyValuePair.Value);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            //Chat.PrintError(ex.ToString());
-        }
+        BaseServices.PluginInterface.UiBuilder.Draw += DrawUI;
+        BaseServices.PluginInterface.UiBuilder.OpenMainUi += ToggleMainUI;
     }
 
     public void Dispose()
     {
         WindowSystem.RemoveAllWindows();
-        
-        MainWindow.Dispose();
 
-        CommandManager.RemoveHandler(CommandName);
+        BaseServices.CommandManager.RemoveHandler(CommandName);
     }
 
     private void OnCommand(string command, string args)

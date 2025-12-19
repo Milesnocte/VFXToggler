@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Dalamud.NET.Sdk/13.0.0">
+<Project Sdk="Dalamud.NET.Sdk/14.0.1">
   <PropertyGroup>
-    <Version>0.0.0.7</Version>
+    <Version>0.0.0.8</Version>
     <Description>Allows swapping per instance vfx settings</Description>
     <PackageProjectUrl>https://github.com/Milesnocte/VFXToggler</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
@@ -9,5 +9,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Update="DalamudPackager" Version="13.0.0" />
+    <PackageReference Include="ECommons" Version="3.0.1.9" />
+    <PackageReference Include="Lumina" Version="6.5.1" />
+    <PackageReference Include="LuminaCache.AspNetCore" Version="1.0.0" />
+    <PackageReference Include="LuminaCache.Core" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
   </ItemGroup>
 </Project>

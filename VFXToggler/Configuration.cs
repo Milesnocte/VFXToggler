@@ -9,10 +9,11 @@ public class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 0;
 
-    public Dictionary<string, Dictionary<string, uint>> ContextualBattleFx = new();
-    
+    public Dictionary<string, Dictionary<string, uint>> InstancedBattleFx = new();
+    public Dictionary<string, Dictionary<string, uint>> CustomBattleFx = new();
+
     public void Save()
     {
-        Plugin.PluginInterface.SavePluginConfig(this);
+        Services.BaseServices.PluginInterface.SavePluginConfig(this);
     }
 }
