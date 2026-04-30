@@ -3,7 +3,7 @@
         "Author": "Miles",
         "Name": "VFX Toggler",
         "InternalName": "VFXToggler",
-        "AssemblyVersion": "0.0.0.8",
+        "AssemblyVersion": "0.0.0.9",
         "Punchline": "Toggle vfx per instance",
         "Description": "Allows changing vfx settings on a per instance basis.",
         "ApplicableVersion": "any",
@@ -13,14 +13,14 @@
             "Party Finder"
         ],
         "RepoUrl": "https://github.com/Milesnocte/PFLogs",
-        "DalamudApiLevel": 14,
+        "DalamudApiLevel": 15,
         "LoadRequiredState": 0,
         "LoadSync": false,
         "CanUnloadAsync": false,
         "LoadPriority": 0,
-        "DownloadLinkInstall": "https://github.com/Milesnocte/VFXToggler/releases/download/0.0.0.8/latest.zip",
-        "DownloadLinkTesting": "https://github.com/Milesnocte/VFXToggler/releases/download/0.0.0.8/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/Milesnocte/VFXToggler/releases/download/0.0.0.8/latest.zip",
+        "DownloadLinkInstall": "https://github.com/Milesnocte/VFXToggler/releases/download/0.0.0.9/latest.zip",
+        "DownloadLinkTesting": "https://github.com/Milesnocte/VFXToggler/releases/download/0.0.0.9/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/Milesnocte/VFXToggler/releases/download/0.0.0.9/latest.zip",
         "AcceptsFeedback": true
     }
 ]

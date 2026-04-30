@@ -13,7 +13,7 @@ public class TerritoryChange
         BaseServices.ClientState.TerritoryChanged += OnTerritoryChanged;
     }
 
-      private void OnTerritoryChanged(ushort territoryId)
+      private void OnTerritoryChanged(uint u)
     {
         try
         {

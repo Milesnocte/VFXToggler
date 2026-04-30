@@ -1,3 +1,4 @@
+using Dalamud;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.ManagedFontAtlas;
 
@@ -14,7 +15,7 @@ public class UiService
         
         HeaderFont = atlas.NewDelegateFontHandle(e =>
         {
-            e.OnPreBuild(tk => tk.AddDalamudAssetFont(Dalamud.DalamudAsset.NotoSansJpMedium, new()
+            e.OnPreBuild(tk => tk.AddDalamudAssetFont(DalamudAsset.NotoSansCjkMedium, new()
             {
                 SizePx = 36,
             }));
@@ -22,7 +23,7 @@ public class UiService
 
         SubHeaderFont = atlas.NewDelegateFontHandle(e =>
         {
-            e.OnPreBuild(tk => tk.AddDalamudAssetFont(Dalamud.DalamudAsset.NotoSansJpMedium, new()
+            e.OnPreBuild(tk => tk.AddDalamudAssetFont(DalamudAsset.NotoSansCjkMedium, new()
             {
                 SizePx = 30,
             }));
